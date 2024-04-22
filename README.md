@@ -2,7 +2,7 @@
 
 Here are some screenshots of my React Native Pokemon App:
 
-![Screenshot 1](src/assets/previewImages/App - portfolio.png)
+![Screenshot 1](src/assets/previewImages/appPortfolio.png)
 
 # Getting Started
 
@@ -56,4 +56,3 @@ You've successfully run React Native News App. :partying_face:
 # Troubleshooting
 
 If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
