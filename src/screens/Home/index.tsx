@@ -1,76 +1,63 @@
 // App.js
 
 import React, {useState, useEffect} from 'react';
-import {
-  StyleSheet,
-  View,
-  Text,
-  TextInput,
-  FlatList,
-  TouchableOpacity,
-  Image,
-} from 'react-native';
-import {widthPercentageToDP as wp} from 'react-native-responsive-screen';
+import {View, Text, TextInput, FlatList} from 'react-native';
+import {getListPokemons} from '../../services';
+import {styles} from './style';
+import {showMessage} from 'react-native-flash-message';
+import {screenName} from '../../navigation/ScreenRoutes';
+import SearchListItem from '../../components/SearchListItem';
 
-const API_URL = 'https://pokeapi.co/api/v2/pokemon/';
-
-interface Pokmon {
+interface PokemonType {
   name: string;
   url: string;
 }
 
 const Home = (props: any) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [pokemonList, setPokemonList] = useState<Pokmon[]>([]);
-  const [filteredPokemonList, setFilteredPokemonList] = useState<Pokmon[]>([]);
+  const [pokemonList, setPokemonList] = useState<PokemonType[]>([]);
+  const [filteredPokemonList, setFilteredPokemonList] = useState<PokemonType[]>(
+    [],
+  );
+  const [showNoPokemonFound, setShowNoPokemonFound] = useState(false);
 
   useEffect(() => {
     fetchPokemon();
   }, []);
 
+  const fetchPokemon = async () => {
+    try {
+      const res: PokemonType[] = await getListPokemons();
+      setPokemonList(res);
+      setFilteredPokemonList(res);
+    } catch (err) {
+      setShowNoPokemonFound(true);
+      showMessage({
+        type: 'danger',
+        message: 'Something went wrong',
+      });
+      console.log('Error', err);
+    }
+  };
+
   useEffect(() => {
     if (searchQuery === '') {
       setFilteredPokemonList(pokemonList);
     } else {
-      console.log('Comming in else', searchQuery);
       const filtered = pokemonList.filter(pokemon =>
         pokemon.name.toLowerCase().includes(searchQuery.toLowerCase()),
       );
-      console.log('Filtered is:', filtered);
       setFilteredPokemonList(filtered);
+      setShowNoPokemonFound(filtered.length === 0);
     }
   }, [searchQuery, pokemonList]);
 
-  const fetchPokemon = async () => {
-    try {
-      const response = await fetch(API_URL);
-      const data = await response.json();
-      setPokemonList(data.results);
-      setFilteredPokemonList(data.results);
-    } catch (error) {
-      console.error('Error fetching Pokemon:', error);
-    }
-  };
-
-  const renderItem = ({item}: any) => (
-    <TouchableOpacity onPress={() => navigateToDetail(item)}>
-      <View style={styles.item}>
-        <Image
-          style={styles.image}
-          source={{
-            uri: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${
-              item.url.split('/')[6]
-            }.png`,
-          }}
-        />
-        <Text>{item.name}</Text>
-      </View>
-    </TouchableOpacity>
+  const renderItem = ({item}: {item: PokemonType}) => (
+    <SearchListItem item={item} navigateToDetail={navigateToDetail} />
   );
 
-  const navigateToDetail = (data: any) => {
-    console.log('Data', data);
-    props.navigation.navigate('PokemonDetails', {
+  const navigateToDetail = (data: PokemonType) => {
+    props.navigation.navigate(screenName.PokemonDetails, {
       url: data.url,
     });
   };
@@ -83,42 +70,19 @@ const Home = (props: any) => {
         onChangeText={setSearchQuery}
         value={searchQuery}
       />
-      <FlatList
-        data={filteredPokemonList}
-        renderItem={renderItem}
-        keyExtractor={item => item?.name}
-      />
+      {showNoPokemonFound ? (
+        <Text>
+          No Pokémon found{searchQuery && ` with name ${searchQuery}`}
+        </Text>
+      ) : (
+        <FlatList
+          data={filteredPokemonList}
+          renderItem={renderItem}
+          keyExtractor={item => item.url}
+        />
+      )}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  input: {
-    height: 40,
-    width: '100%',
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingHorizontal: 10,
-  },
-  item: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    width: wp('90%'),
-  },
-  image: {
-    width: 50,
-    height: 50,
-    marginRight: 10,
-  },
-});
 
 export default Home;
