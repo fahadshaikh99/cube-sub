@@ -29,7 +29,8 @@ const PokemonDetails = ({route}: any) => {
   const fetchPokemonDetails = async () => {
     getPokemonByURL(url)
       .then(res => {
-        setPokemonDetails(res);
+        console.log('Res', res.data);
+        setPokemonDetails(res.data);
       })
       .catch(err => {
         showMessage({
@@ -64,7 +65,7 @@ const PokemonDetails = ({route}: any) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Abilities</Text>
           <View style={styles.abilitiesContainer}>
-            {pokemonDetails.abilities.map((ability, index) => (
+            {pokemonDetails?.abilities.map((ability, index) => (
               <Text key={index} style={styles.ability}>
                 {ability.ability.name}
               </Text>
